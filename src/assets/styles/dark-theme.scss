@@ -1,0 +1,138 @@
+html {
+  --el-bg-color: #1c2128;
+  --el-bg-color-overlay: #1c2128;
+  --el-bg-color-page: #0d1117;
+  --el-text-color-primary: #e6edf3;
+  --el-text-color-regular: #adbac7;
+  --el-text-color-secondary: #768390;
+  --el-text-color-placeholder: #545d68;
+  --el-border-color: #30363d;
+  --el-border-color-light: #30363d;
+  --el-border-color-lighter: #21262d;
+  --el-fill-color-blank: #0d1117;
+  --el-color-primary: #4e8cff;
+  --el-color-success: #3fb950;
+  --el-color-warning: #d29922;
+  --el-color-danger: #f85149;
+  --el-color-info: #58a6ff;
+  --el-mask-color: rgba(0, 0, 0, 0.65);
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+:root {
+  --bg: #0d1117;
+  --sidebar: #161b22;
+  --card: #1c2128;
+  --card-hover: #21262d;
+  --border: #30363d;
+  --border-light: #3d444d;
+  --text: #adbac7;
+  --text-light: #768390;
+  --text-white: #e6edf3;
+  --primary: #4e8cff;
+  --primary-hover: #3b7bef;
+  --primary-glow: rgba(78, 140, 255, 0.2);
+  --success: #3fb950;
+  --warning: #d29922;
+  --danger: #f85149;
+  --info: #58a6ff;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC',
+    Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+a {
+  color: var(--info);
+  text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-light);
+}
+
+// Element Plus overrides for dark theme
+.el-table {
+  --el-table-bg-color: var(--card);
+  --el-table-tr-bg-color: var(--card);
+  --el-table-header-bg-color: rgba(0, 0, 0, 0.2);
+  --el-table-row-hover-bg-color: rgba(78, 140, 255, 0.04);
+  --el-table-border-color: var(--border);
+  --el-table-text-color: var(--text);
+  --el-table-header-text-color: var(--text-light);
+}
+
+.el-card {
+  --el-card-bg-color: var(--card);
+  --el-card-border-color: var(--border);
+}
+
+.el-input__wrapper,
+.el-textarea__inner {
+  background-color: var(--bg) !important;
+  box-shadow: 0 0 0 1px var(--border) inset !important;
+}
+
+.el-input__wrapper:hover,
+.el-textarea__inner:hover {
+  box-shadow: 0 0 0 1px var(--border-light) inset !important;
+}
+
+.el-input__wrapper.is-focus,
+.el-textarea__inner:focus {
+  box-shadow: 0 0 0 1px var(--primary) inset !important;
+}
+
+.el-select__wrapper {
+  background-color: var(--bg) !important;
+  box-shadow: 0 0 0 1px var(--border) inset !important;
+}
+
+.el-dialog {
+  --el-dialog-bg-color: var(--card);
+  --el-dialog-border-radius: var(--radius-lg);
+}
+
+.el-pagination {
+  --el-pagination-bg-color: transparent;
+  --el-pagination-button-bg-color: transparent;
+  --el-pagination-hover-color: var(--primary);
+}
+
+.el-menu {
+  background-color: transparent;
+  border-right: none;
+}
+
+.el-upload-dragger {
+  background-color: var(--bg);
+  border-color: var(--border);
+}
