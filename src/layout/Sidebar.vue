@@ -6,6 +6,7 @@ const props = defineProps({
   collapsed: Boolean,
   reviewCount: { type: Number, default: 0 },
   trashCount: { type: Number, default: 0 },
+  forumReviewCount: { type: Number, default: 0 },
 })
 
 const route = useRoute()
@@ -19,7 +20,8 @@ const menuItems = [
   { path: '/articles/create', title: '新建文章', icon: 'fas fa-pen-fancy' },
   { path: '/banners', title: '轮播管理', icon: 'fas fa-images' },
   { group: '审核' },
-  { path: '/review', title: '内容审核', icon: 'fas fa-clipboard-check', badge: 'review' },
+  { path: '/review', title: '文章审核', icon: 'fas fa-clipboard-check', badge: 'review' },
+  { path: '/forum-review', title: '帖子审核', icon: 'fas fa-comments', badge: 'forumReview' },
   { path: '/trash', title: '回收站', icon: 'fas fa-trash-alt', badge: 'trash' },
 ]
 
@@ -57,6 +59,10 @@ function navigate(path) {
             v-if="item.badge === 'review' && reviewCount > 0"
             class="nav-badge review-badge"
           >{{ reviewCount > 99 ? '99+' : reviewCount }}</span>
+          <span
+            v-if="item.badge === 'forumReview' && forumReviewCount > 0"
+            class="nav-badge review-badge"
+          >{{ forumReviewCount > 99 ? '99+' : forumReviewCount }}</span>
           <span
             v-if="item.badge === 'trash' && trashCount > 0"
             class="nav-badge trash-badge"
