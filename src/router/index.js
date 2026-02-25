@@ -46,7 +46,13 @@ const routes = [
         path: 'review',
         name: 'Review',
         component: () => import('../views/Review.vue'),
-        meta: { title: '内容审核', icon: 'Checked' },
+        meta: { title: '文章审核', icon: 'Checked' },
+      },
+      {
+        path: 'forum-review',
+        name: 'ForumReview',
+        component: () => import('../views/ForumReview.vue'),
+        meta: { title: '帖子审核', icon: 'ChatDotRound' },
       },
       {
         path: 'trash',

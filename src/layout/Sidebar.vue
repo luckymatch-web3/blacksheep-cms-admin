@@ -63,6 +63,10 @@ function navigate(path) {
             class="nav-badge review-badge"
           >{{ reviewCount > 99 ? '99+' : reviewCount }}</span>
           <span
+            v-if="item.badge === 'forumReview' && forumReviewCount > 0"
+            class="nav-badge review-badge"
+          >{{ forumReviewCount > 99 ? '99+' : forumReviewCount }}</span>
+          <span
             v-if="item.badge === 'trash' && trashCount > 0"
             class="nav-badge trash-badge"
           >{{ trashCount > 99 ? '99+' : trashCount }}</span>
