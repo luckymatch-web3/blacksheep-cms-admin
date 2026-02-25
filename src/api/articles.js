@@ -6,7 +6,7 @@ export function getArticles(params) {
 }
 
 export function getArticle(id) {
-  return request.get(`/v1/articles/${id}`)
+  return request.get(`/admin/articles/${id}`)
 }
 
 export function createArticle(data) {

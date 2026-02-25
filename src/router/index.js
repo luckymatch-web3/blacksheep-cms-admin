@@ -54,6 +54,18 @@ const routes = [
         component: () => import('../views/Trash.vue'),
         meta: { title: '回收站', icon: 'Delete' },
       },
+      {
+        path: 'forum-review',
+        name: 'ForumReview',
+        component: () => import('../views/ForumReview.vue'),
+        meta: { title: '帖子审核', icon: 'ChatDotSquare' },
+      },
+      {
+        path: 'withdrawals',
+        name: 'WithdrawalManage',
+        component: () => import('../views/WithdrawalManage.vue'),
+        meta: { title: '提现管理', icon: 'Money' },
+      },
     ],
   },
 ]

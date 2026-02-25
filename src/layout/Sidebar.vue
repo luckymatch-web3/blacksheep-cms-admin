@@ -6,6 +6,8 @@ const props = defineProps({
   collapsed: Boolean,
   reviewCount: { type: Number, default: 0 },
   trashCount: { type: Number, default: 0 },
+  forumPendingCount: { type: Number, default: 0 },
+  withdrawalPendingCount: { type: Number, default: 0 },
 })
 
 const route = useRoute()
@@ -19,8 +21,11 @@ const menuItems = [
   { path: '/articles/create', title: '新建文章', icon: 'fas fa-pen-fancy' },
   { path: '/banners', title: '轮播管理', icon: 'fas fa-images' },
   { group: '审核' },
-  { path: '/review', title: '内容审核', icon: 'fas fa-clipboard-check', badge: 'review' },
+  { path: '/review', title: '文章审核', icon: 'fas fa-clipboard-check', badge: 'review' },
+  { path: '/forum-review', title: '帖子审核', icon: 'fas fa-comments', badge: 'forum' },
   { path: '/trash', title: '回收站', icon: 'fas fa-trash-alt', badge: 'trash' },
+  { group: '财务' },
+  { path: '/withdrawals', title: '提现管理', icon: 'fas fa-money-bill-transfer', badge: 'withdrawal' },
 ]
 
 const isActive = (path) => {
@@ -61,6 +66,14 @@ function navigate(path) {
             v-if="item.badge === 'trash' && trashCount > 0"
             class="nav-badge trash-badge"
           >{{ trashCount > 99 ? '99+' : trashCount }}</span>
+          <span
+            v-if="item.badge === 'forum' && forumPendingCount > 0"
+            class="nav-badge forum-badge"
+          >{{ forumPendingCount > 99 ? '99+' : forumPendingCount }}</span>
+          <span
+            v-if="item.badge === 'withdrawal' && withdrawalPendingCount > 0"
+            class="nav-badge withdrawal-badge"
+          >{{ withdrawalPendingCount > 99 ? '99+' : withdrawalPendingCount }}</span>
         </div>
       </template>
     </nav>
@@ -190,5 +203,13 @@ function navigate(path) {
 }
 .trash-badge {
   background: var(--text-light);
+}
+.forum-badge {
+  background: var(--warning);
+  box-shadow: 0 1px 4px rgba(210, 153, 34, 0.4);
+}
+.withdrawal-badge {
+  background: var(--success);
+  box-shadow: 0 1px 4px rgba(63, 185, 80, 0.4);
 }
 </style>
