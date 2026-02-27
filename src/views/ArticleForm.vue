@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import mammoth from 'mammoth'
 import QuillEditor from '../components/QuillEditor.vue'
 import {
   getArticle, createArticle, updateArticle,
@@ -171,6 +172,42 @@ function handleCoverUrlInput() {
   }
 }
 
+const wordFileInput = ref(null)
+const wordImporting = ref(false)
+
+function triggerWordImport() {
+  wordFileInput.value?.click()
+}
+
+async function handleWordImport(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  if (!file.name.endsWith('.docx')) {
+    ElMessage.error('仅支持 .docx 格式的 Word 文件')
+    event.target.value = ''
+    return
+  }
+  wordImporting.value = true
+  try {
+    const arrayBuffer = await file.arrayBuffer()
+    const result = await mammoth.convertToHtml({ arrayBuffer })
+    if (result.value) {
+      form.value.content = result.value
+      ElMessage.success('Word 文档导入成功')
+      if (result.messages.length > 0) {
+        console.warn('Word import warnings:', result.messages)
+      }
+    } else {
+      ElMessage.warning('文档内容为空')
+    }
+  } catch (e) {
+    ElMessage.error('导入失败: ' + (e.message || ''))
+  } finally {
+    wordImporting.value = false
+    event.target.value = ''
+  }
+}
+
 const showRejectBox = computed(() => articleStatus.value === 'REJECTED' && rejectNotes.value)
 const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || articleStatus.value === 'PENDING_REVIEW')
 </script>
@@ -214,6 +251,12 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
               <el-input v-model="form.summary" type="textarea" :rows="2" placeholder="Brief summary for list display" />
             </el-form-item>
             <el-form-item label="Content">
+              <div class="content-toolbar">
+                <el-button size="small" @click="triggerWordImport" :loading="wordImporting">
+                  <i class="fas fa-file-word" style="margin-right: 4px"></i> 导入 Word
+                </el-button>
+                <input ref="wordFileInput" type="file" accept=".docx" style="display:none" @change="handleWordImport" />
+              </div>
               <QuillEditor v-model="form.content" />
             </el-form-item>
           </el-form>
@@ -318,5 +361,11 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
   object-fit: cover;
   border-radius: var(--radius);
   cursor: pointer;
+}
+.content-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+  width: 100%;
 }
 </style>
