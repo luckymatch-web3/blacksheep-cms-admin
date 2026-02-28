@@ -36,6 +36,7 @@ const categories = ref([])
 const loading = ref(false)
 const coverUrlInput = ref('')
 const aiPrompt = ref('')
+const aiFluxPrompt = ref('')
 const aiPromptLoading = ref(false)
 const aiImageLoading = ref(false)
 
@@ -210,11 +211,15 @@ async function handleGenerateImage() {
     return
   }
   aiImageLoading.value = true
+  aiFluxPrompt.value = ''
   try {
     const { data } = await generateCover({ prompt: aiPrompt.value })
     if (data.success) {
       form.value.coverImageUrl = data.imageUrl
       coverUrlInput.value = data.imageUrl
+      if (data.fluxPrompt && data.fluxPrompt !== aiPrompt.value) {
+        aiFluxPrompt.value = data.fluxPrompt
+      }
       ElMessage.success('封面图已生成')
     } else {
       ElMessage.error(data.error || '生图失败')
@@ -360,6 +365,10 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
               <i v-if="!aiImageLoading" class="fas fa-image" style="margin-right: 6px"></i>
               {{ aiImageLoading ? '生成图片中...' : '2. 生成图片' }}
             </el-button>
+            <div v-if="aiFluxPrompt" class="flux-prompt-box">
+              <label><i class="fas fa-language"></i> 实际发给 FLUX 的英文提示词：</label>
+              <div class="flux-prompt-text">{{ aiFluxPrompt }}</div>
+            </div>
           </div>
         </el-card>
 
@@ -452,5 +461,26 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
   justify-content: flex-end;
   margin-bottom: 8px;
   width: 100%;
+}
+.flux-prompt-box {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(78, 140, 255, 0.06);
+  border: 1px solid rgba(78, 140, 255, 0.15);
+  border-radius: var(--radius);
+}
+.flux-prompt-box label {
+  font-size: 11px;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.flux-prompt-text {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.5;
+  word-break: break-word;
 }
 </style>
