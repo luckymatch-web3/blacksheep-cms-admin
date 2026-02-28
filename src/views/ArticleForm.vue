@@ -284,9 +284,15 @@ async function handleGenerateImage() {
 
 const wordFileInput = ref(null)
 const wordImporting = ref(false)
+const wordFileInputZh = ref(null)
+const wordImportingZh = ref(false)
 
 function triggerWordImport() {
   wordFileInput.value?.click()
+}
+
+function triggerWordImportZh() {
+  wordFileInputZh.value?.click()
 }
 
 async function handleWordImport(event) {
@@ -314,6 +320,35 @@ async function handleWordImport(event) {
     ElMessage.error('导入失败: ' + (e.message || ''))
   } finally {
     wordImporting.value = false
+    event.target.value = ''
+  }
+}
+
+async function handleWordImportZh(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  if (!file.name.endsWith('.docx')) {
+    ElMessage.error('仅支持 .docx 格式的 Word 文件')
+    event.target.value = ''
+    return
+  }
+  wordImportingZh.value = true
+  try {
+    const arrayBuffer = await file.arrayBuffer()
+    const result = await mammoth.convertToHtml({ arrayBuffer })
+    if (result.value) {
+      form.value.contentZh = result.value
+      ElMessage.success('Word 文档导入成功（中文）')
+      if (result.messages.length > 0) {
+        console.warn('Word import warnings:', result.messages)
+      }
+    } else {
+      ElMessage.warning('文档内容为空')
+    }
+  } catch (e) {
+    ElMessage.error('导入失败: ' + (e.message || ''))
+  } finally {
+    wordImportingZh.value = false
     event.target.value = ''
   }
 }
@@ -391,6 +426,12 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
                   <el-input v-model="form.summaryZh" type="textarea" :rows="2" placeholder="列表页显示的简短摘要" />
                 </el-form-item>
                 <el-form-item label="正文">
+                  <div class="content-toolbar">
+                    <el-button size="small" @click="triggerWordImportZh" :loading="wordImportingZh">
+                      <i class="fas fa-file-word" style="margin-right: 4px"></i> 导入 Word
+                    </el-button>
+                    <input ref="wordFileInputZh" type="file" accept=".docx" style="display:none" @change="handleWordImportZh" />
+                  </div>
                   <QuillEditor v-model="form.contentZh" />
                 </el-form-item>
               </el-form>
