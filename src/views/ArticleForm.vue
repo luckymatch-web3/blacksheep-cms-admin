@@ -7,7 +7,7 @@ import QuillEditor from '../components/QuillEditor.vue'
 import {
   getArticle, createArticle, updateArticle,
   publishArticle, submitReview, setBanner,
-  getCategories, uploadFile, generateCover, generateAndSetCover,
+  getCategories, uploadFile, generatePrompt, generateCover,
 } from '../api/articles'
 
 const route = useRoute()
@@ -35,7 +35,9 @@ const rejectNotes = ref('')
 const categories = ref([])
 const loading = ref(false)
 const coverUrlInput = ref('')
-const aiGenerating = ref(false)
+const aiPrompt = ref('')
+const aiPromptLoading = ref(false)
+const aiImageLoading = ref(false)
 
 onMounted(async () => {
   loadCategories()
@@ -177,42 +179,50 @@ function handleCoverUrlInput() {
   }
 }
 
-async function handleAiGenerate() {
+async function handleGeneratePrompt() {
   if (!form.value.title.trim()) {
-    ElMessage.warning('Please enter a title first')
+    ElMessage.warning('请先输入标题')
     return
   }
-  aiGenerating.value = true
+  aiPromptLoading.value = true
   try {
-    if (isEdit.value) {
-      // For existing articles, generate and auto-set
-      const { data } = await generateAndSetCover(editId.value)
-      if (data.success) {
-        form.value.coverImageUrl = data.imageUrl
-        coverUrlInput.value = data.imageUrl
-        ElMessage.success('AI cover generated and saved')
-      } else {
-        ElMessage.error(data.error || 'AI generation failed')
-      }
+    const { data } = await generatePrompt({
+      title: form.value.title,
+      content: form.value.content || '',
+      category: form.value.category || '',
+    })
+    if (data.success) {
+      aiPrompt.value = data.prompt
+      ElMessage.success('提示词已生成，可修改后再生图')
     } else {
-      // For new articles, just generate
-      const { data } = await generateCover({
-        title: form.value.title,
-        content: form.value.content || '',
-        category: form.value.category || '',
-      })
-      if (data.success) {
-        form.value.coverImageUrl = data.imageUrl
-        coverUrlInput.value = data.imageUrl
-        ElMessage.success('AI cover generated')
-      } else {
-        ElMessage.error(data.error || 'AI generation failed')
-      }
+      ElMessage.error(data.error || '生成失败')
     }
   } catch (e) {
-    ElMessage.error('AI generation failed: ' + (e.response?.data?.error || e.message || ''))
+    ElMessage.error('生成提示词失败: ' + (e.response?.data?.error || e.message || ''))
   } finally {
-    aiGenerating.value = false
+    aiPromptLoading.value = false
+  }
+}
+
+async function handleGenerateImage() {
+  if (!aiPrompt.value.trim()) {
+    ElMessage.warning('请先生成或输入提示词')
+    return
+  }
+  aiImageLoading.value = true
+  try {
+    const { data } = await generateCover({ prompt: aiPrompt.value })
+    if (data.success) {
+      form.value.coverImageUrl = data.imageUrl
+      coverUrlInput.value = data.imageUrl
+      ElMessage.success('封面图已生成')
+    } else {
+      ElMessage.error(data.error || '生图失败')
+    }
+  } catch (e) {
+    ElMessage.error('生图失败: ' + (e.response?.data?.error || e.message || ''))
+  } finally {
+    aiImageLoading.value = false
   }
 }
 
@@ -330,10 +340,25 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
             <label style="font-size: 12px; color: var(--text-light)">Or enter image URL</label>
             <el-input v-model="coverUrlInput" placeholder="https://..." @input="handleCoverUrlInput" style="margin-top: 4px" />
           </div>
-          <div style="margin-top: 10px">
-            <el-button type="primary" style="width: 100%" :loading="aiGenerating" @click="handleAiGenerate">
-              <i v-if="!aiGenerating" class="fas fa-wand-magic-sparkles" style="margin-right: 6px"></i>
-              {{ aiGenerating ? 'AI Generating...' : 'AI Generate Cover' }}
+          <!-- AI Cover Generation -->
+          <div style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px">
+            <label style="font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 4px; margin-bottom: 6px">
+              <i class="fas fa-wand-magic-sparkles"></i> AI 生成封面
+            </label>
+            <el-button style="width: 100%; margin-bottom: 8px" :loading="aiPromptLoading" @click="handleGeneratePrompt">
+              <i v-if="!aiPromptLoading" class="fas fa-brain" style="margin-right: 6px"></i>
+              {{ aiPromptLoading ? '生成提示词中...' : '1. 生成提示词' }}
+            </el-button>
+            <el-input
+              v-model="aiPrompt"
+              type="textarea"
+              :rows="4"
+              placeholder="点击上方按钮自动生成，也可以直接输入/修改提示词..."
+              style="margin-bottom: 8px"
+            />
+            <el-button type="primary" style="width: 100%" :loading="aiImageLoading" :disabled="!aiPrompt.trim()" @click="handleGenerateImage">
+              <i v-if="!aiImageLoading" class="fas fa-image" style="margin-right: 6px"></i>
+              {{ aiImageLoading ? '生成图片中...' : '2. 生成图片' }}
             </el-button>
           </div>
         </el-card>

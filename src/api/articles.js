@@ -68,12 +68,12 @@ export function getCategories() {
 }
 
 // AI Cover Image Generation
-export function generateCover(data) {
-  return request.post('/admin/articles/generate-cover', data)
+export function generatePrompt(data) {
+  return request.post('/admin/articles/generate-prompt', data)
 }
 
-export function generateAndSetCover(id) {
-  return request.post(`/admin/articles/${id}/generate-cover`)
+export function generateCover(data) {
+  return request.post('/admin/articles/generate-cover', data)
 }
 
 // File upload
