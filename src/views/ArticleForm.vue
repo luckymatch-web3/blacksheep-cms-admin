@@ -7,7 +7,7 @@ import QuillEditor from '../components/QuillEditor.vue'
 import {
   getArticle, createArticle, updateArticle,
   publishArticle, submitReview, setBanner,
-  getCategories, uploadFile,
+  getCategories, uploadFile, generateCover, generateAndSetCover,
 } from '../api/articles'
 
 const route = useRoute()
@@ -26,6 +26,7 @@ const form = ref({
   category: '',
   tags: '',
   coverImageUrl: '',
+  language: 'en',
   isBanner: false,
   bannerSort: 0,
 })
@@ -34,6 +35,7 @@ const rejectNotes = ref('')
 const categories = ref([])
 const loading = ref(false)
 const coverUrlInput = ref('')
+const aiGenerating = ref(false)
 
 onMounted(async () => {
   loadCategories()
@@ -50,6 +52,7 @@ onMounted(async () => {
       form.value.category = a.category || ''
       form.value.tags = a.tags || ''
       form.value.coverImageUrl = a.coverImageUrl || ''
+      form.value.language = a.language || 'en'
       form.value.isBanner = a.isBanner || false
       form.value.bannerSort = a.bannerSort || 0
       coverUrlInput.value = a.coverImageUrl || ''
@@ -87,6 +90,7 @@ async function handleSave(targetStatus) {
       authorName: form.value.authorName || null,
       category: form.value.category || null,
       tags: form.value.tags || null,
+      language: form.value.language || 'en',
       status: targetStatus,
     }
 
@@ -130,6 +134,7 @@ async function handleSubmitReview() {
       authorName: form.value.authorName || null,
       category: form.value.category || null,
       tags: form.value.tags || null,
+      language: form.value.language || 'en',
     }
 
     let id = editId.value
@@ -169,6 +174,45 @@ function handleCoverUrlInput() {
   const url = coverUrlInput.value.trim()
   if (url && (url.startsWith('http') || url.startsWith('/'))) {
     form.value.coverImageUrl = url
+  }
+}
+
+async function handleAiGenerate() {
+  if (!form.value.title.trim()) {
+    ElMessage.warning('Please enter a title first')
+    return
+  }
+  aiGenerating.value = true
+  try {
+    if (isEdit.value) {
+      // For existing articles, generate and auto-set
+      const { data } = await generateAndSetCover(editId.value)
+      if (data.success) {
+        form.value.coverImageUrl = data.imageUrl
+        coverUrlInput.value = data.imageUrl
+        ElMessage.success('AI cover generated and saved')
+      } else {
+        ElMessage.error(data.error || 'AI generation failed')
+      }
+    } else {
+      // For new articles, just generate
+      const { data } = await generateCover({
+        title: form.value.title,
+        content: form.value.content || '',
+        category: form.value.category || '',
+      })
+      if (data.success) {
+        form.value.coverImageUrl = data.imageUrl
+        coverUrlInput.value = data.imageUrl
+        ElMessage.success('AI cover generated')
+      } else {
+        ElMessage.error(data.error || 'AI generation failed')
+      }
+    }
+  } catch (e) {
+    ElMessage.error('AI generation failed: ' + (e.response?.data?.error || e.message || ''))
+  } finally {
+    aiGenerating.value = false
   }
 }
 
@@ -286,11 +330,27 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
             <label style="font-size: 12px; color: var(--text-light)">Or enter image URL</label>
             <el-input v-model="coverUrlInput" placeholder="https://..." @input="handleCoverUrlInput" style="margin-top: 4px" />
           </div>
+          <div style="margin-top: 10px">
+            <el-button type="primary" style="width: 100%" :loading="aiGenerating" @click="handleAiGenerate">
+              <i v-if="!aiGenerating" class="fas fa-wand-magic-sparkles" style="margin-right: 6px"></i>
+              {{ aiGenerating ? 'AI Generating...' : 'AI Generate Cover' }}
+            </el-button>
+          </div>
         </el-card>
 
-        <!-- Author / Category / Tags -->
+        <!-- Author / Category / Tags / Language -->
         <el-card shadow="never" style="margin-bottom: 12px">
           <el-form label-position="top">
+            <el-form-item label="Language">
+              <el-select v-model="form.language" style="width: 100%">
+                <el-option label="English" value="en">
+                  <span>🇺🇸 English</span>
+                </el-option>
+                <el-option label="中文" value="zh">
+                  <span>🇨🇳 中文</span>
+                </el-option>
+              </el-select>
+            </el-form-item>
             <el-form-item label="Author">
               <el-input v-model="form.authorName" placeholder="Author name">
                 <template #prefix><i class="fas fa-user-pen"></i></template>

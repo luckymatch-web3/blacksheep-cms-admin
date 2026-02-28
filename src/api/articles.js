@@ -67,6 +67,15 @@ export function getCategories() {
   return request.get('/v1/articles/categories')
 }
 
+// AI Cover Image Generation
+export function generateCover(data) {
+  return request.post('/admin/articles/generate-cover', data)
+}
+
+export function generateAndSetCover(id) {
+  return request.post(`/admin/articles/${id}/generate-cover`)
+}
+
 // File upload
 export function uploadFile(file) {
   const formData = new FormData()

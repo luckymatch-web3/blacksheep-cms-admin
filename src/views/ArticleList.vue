@@ -14,6 +14,7 @@ const articles = ref([])
 const loading = ref(false)
 const keyword = ref('')
 const statusFilter = ref('')
+const langFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(15)
 const total = ref(0)
@@ -48,6 +49,7 @@ async function loadData() {
     const params = { page: currentPage.value - 1, size: pageSize.value }
     if (keyword.value) params.keyword = keyword.value
     if (statusFilter.value) params.status = statusFilter.value
+    if (langFilter.value) params.lang = langFilter.value
     const { data } = await getArticles(params)
     articles.value = data.content || []
     total.value = data.pageable?.totalElements || 0
@@ -61,6 +63,7 @@ async function loadData() {
 function resetSearch() {
   keyword.value = ''
   statusFilter.value = ''
+  langFilter.value = ''
   currentPage.value = 1
   loadData()
 }
@@ -154,6 +157,11 @@ onMounted(loadData)
       <el-select v-model="statusFilter" placeholder="状态" style="width: 140px" @change="currentPage = 1; loadData()">
         <el-option v-for="opt in statusOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
       </el-select>
+      <el-select v-model="langFilter" placeholder="语言" style="width: 120px" @change="currentPage = 1; loadData()">
+        <el-option label="全部" value="" />
+        <el-option label="English" value="en" />
+        <el-option label="中文" value="zh" />
+      </el-select>
       <el-button type="primary" @click="currentPage = 1; loadData()">
         <i class="fas fa-search" style="margin-right: 4px"></i> 搜索
       </el-button>
@@ -181,6 +189,11 @@ onMounted(loadData)
         </el-table-column>
         <el-table-column prop="category" label="分类" width="100">
           <template #default="{ row }">{{ row.category || '-' }}</template>
+        </el-table-column>
+        <el-table-column prop="language" label="语言" width="70" align="center">
+          <template #default="{ row }">
+            <span>{{ row.language === 'zh' ? '🇨🇳' : '🇺🇸' }}</span>
+          </template>
         </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
