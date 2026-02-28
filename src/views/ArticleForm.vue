@@ -19,9 +19,13 @@ const pageTitle = computed(() => isEdit.value ? `编辑文章 #${editId.value}` 
 
 const form = ref({
   title: '',
+  titleZh: '',
   subtitle: '',
+  subtitleZh: '',
   summary: '',
+  summaryZh: '',
   content: '',
+  contentZh: '',
   authorName: '',
   category: '',
   tags: '',
@@ -30,6 +34,7 @@ const form = ref({
   isBanner: false,
   bannerSort: 0,
 })
+const activeLangTab = ref('en')
 const articleStatus = ref('')
 const rejectNotes = ref('')
 const categories = ref([])
@@ -48,9 +53,13 @@ onMounted(async () => {
       const { data } = await getArticle(editId.value)
       const a = data.content ? data.content[0] : (data.data || data)
       form.value.title = a.title || ''
+      form.value.titleZh = a.titleZh || ''
       form.value.subtitle = a.subtitle || ''
+      form.value.subtitleZh = a.subtitleZh || ''
       form.value.summary = a.summary || ''
+      form.value.summaryZh = a.summaryZh || ''
       form.value.content = a.content || ''
+      form.value.contentZh = a.contentZh || ''
       form.value.authorName = a.authorName || ''
       form.value.category = a.category || ''
       form.value.tags = a.tags || ''
@@ -80,8 +89,26 @@ async function loadCategories() {
 
 async function handleSave(targetStatus) {
   if (!form.value.title.trim()) {
-    ElMessage.error('请输入标题')
+    ElMessage.error('请输入英文标题')
+    activeLangTab.value = 'en'
     return
+  }
+  if (targetStatus === 'PUBLISHED') {
+    if (!form.value.titleZh.trim()) {
+      ElMessage.error('发布前请填写中文标题')
+      activeLangTab.value = 'zh'
+      return
+    }
+    if (!form.value.content.trim()) {
+      ElMessage.error('发布前请填写英文内容')
+      activeLangTab.value = 'en'
+      return
+    }
+    if (!form.value.contentZh.trim()) {
+      ElMessage.error('发布前请填写中文内容')
+      activeLangTab.value = 'zh'
+      return
+    }
   }
   loading.value = true
   try {
@@ -89,7 +116,11 @@ async function handleSave(targetStatus) {
       ...form.value,
       coverImageUrl: form.value.coverImageUrl || coverUrlInput.value || null,
       subtitle: form.value.subtitle || null,
+      subtitleZh: form.value.subtitleZh || null,
       summary: form.value.summary || null,
+      summaryZh: form.value.summaryZh || null,
+      contentZh: form.value.contentZh || null,
+      titleZh: form.value.titleZh || null,
       authorName: form.value.authorName || null,
       category: form.value.category || null,
       tags: form.value.tags || null,
@@ -124,7 +155,23 @@ async function handleSave(targetStatus) {
 
 async function handleSubmitReview() {
   if (!form.value.title.trim()) {
-    ElMessage.error('请输入标题')
+    ElMessage.error('请输入英文标题')
+    activeLangTab.value = 'en'
+    return
+  }
+  if (!form.value.titleZh.trim()) {
+    ElMessage.error('提交审核前请填写中文标题')
+    activeLangTab.value = 'zh'
+    return
+  }
+  if (!form.value.content.trim()) {
+    ElMessage.error('提交审核前请填写英文内容')
+    activeLangTab.value = 'en'
+    return
+  }
+  if (!form.value.contentZh.trim()) {
+    ElMessage.error('提交审核前请填写中文内容')
+    activeLangTab.value = 'zh'
     return
   }
   loading.value = true
@@ -133,7 +180,11 @@ async function handleSubmitReview() {
       ...form.value,
       coverImageUrl: form.value.coverImageUrl || coverUrlInput.value || null,
       subtitle: form.value.subtitle || null,
+      subtitleZh: form.value.subtitleZh || null,
       summary: form.value.summary || null,
+      summaryZh: form.value.summaryZh || null,
+      contentZh: form.value.contentZh || null,
+      titleZh: form.value.titleZh || null,
       authorName: form.value.authorName || null,
       category: form.value.category || null,
       tags: form.value.tags || null,
@@ -296,29 +347,64 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
 
     <!-- Two Column Layout -->
     <div class="form-grid">
-      <!-- Left: Content -->
+      <!-- Left: Content (Bilingual Tabs) -->
       <div>
         <el-card shadow="never" style="margin-bottom: 16px">
-          <el-form label-position="top">
-            <el-form-item label="Title" required>
-              <el-input v-model="form.title" placeholder="Enter article title..." size="large" />
-            </el-form-item>
-            <el-form-item label="Subtitle">
-              <el-input v-model="form.subtitle" placeholder="Optional subtitle" />
-            </el-form-item>
-            <el-form-item label="Summary">
-              <el-input v-model="form.summary" type="textarea" :rows="2" placeholder="Brief summary for list display" />
-            </el-form-item>
-            <el-form-item label="Content">
-              <div class="content-toolbar">
-                <el-button size="small" @click="triggerWordImport" :loading="wordImporting">
-                  <i class="fas fa-file-word" style="margin-right: 4px"></i> 导入 Word
-                </el-button>
-                <input ref="wordFileInput" type="file" accept=".docx" style="display:none" @change="handleWordImport" />
-              </div>
-              <QuillEditor v-model="form.content" />
-            </el-form-item>
-          </el-form>
+          <el-tabs v-model="activeLangTab" class="lang-tabs">
+            <el-tab-pane name="en">
+              <template #label>
+                <span class="lang-tab-label">🇺🇸 English</span>
+              </template>
+              <el-form label-position="top">
+                <el-form-item label="Title" required>
+                  <el-input v-model="form.title" placeholder="Enter article title..." size="large" />
+                </el-form-item>
+                <el-form-item label="Subtitle">
+                  <el-input v-model="form.subtitle" placeholder="Optional subtitle" />
+                </el-form-item>
+                <el-form-item label="Summary">
+                  <el-input v-model="form.summary" type="textarea" :rows="2" placeholder="Brief summary for list display" />
+                </el-form-item>
+                <el-form-item label="Content">
+                  <div class="content-toolbar">
+                    <el-button size="small" @click="triggerWordImport" :loading="wordImporting">
+                      <i class="fas fa-file-word" style="margin-right: 4px"></i> 导入 Word
+                    </el-button>
+                    <input ref="wordFileInput" type="file" accept=".docx" style="display:none" @change="handleWordImport" />
+                  </div>
+                  <QuillEditor v-model="form.content" />
+                </el-form-item>
+              </el-form>
+            </el-tab-pane>
+            <el-tab-pane name="zh">
+              <template #label>
+                <span class="lang-tab-label">🇨🇳 中文</span>
+              </template>
+              <el-form label-position="top">
+                <el-form-item label="标题" required>
+                  <el-input v-model="form.titleZh" placeholder="输入中文标题..." size="large" />
+                </el-form-item>
+                <el-form-item label="副标题">
+                  <el-input v-model="form.subtitleZh" placeholder="可选副标题" />
+                </el-form-item>
+                <el-form-item label="摘要">
+                  <el-input v-model="form.summaryZh" type="textarea" :rows="2" placeholder="列表页显示的简短摘要" />
+                </el-form-item>
+                <el-form-item label="正文">
+                  <QuillEditor v-model="form.contentZh" />
+                </el-form-item>
+              </el-form>
+            </el-tab-pane>
+          </el-tabs>
+          <!-- Bilingual completion status -->
+          <div class="lang-status">
+            <span :class="form.title && form.content ? 'lang-done' : 'lang-missing'">
+              <i :class="form.title && form.content ? 'fas fa-check-circle' : 'fas fa-circle'"></i> English
+            </span>
+            <span :class="form.titleZh && form.contentZh ? 'lang-done' : 'lang-missing'">
+              <i :class="form.titleZh && form.contentZh ? 'fas fa-check-circle' : 'fas fa-circle'"></i> 中文
+            </span>
+          </div>
         </el-card>
       </div>
 
@@ -375,16 +461,6 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
         <!-- Author / Category / Tags / Language -->
         <el-card shadow="never" style="margin-bottom: 12px">
           <el-form label-position="top">
-            <el-form-item label="Language">
-              <el-select v-model="form.language" style="width: 100%">
-                <el-option label="English" value="en">
-                  <span>🇺🇸 English</span>
-                </el-option>
-                <el-option label="中文" value="zh">
-                  <span>🇨🇳 中文</span>
-                </el-option>
-              </el-select>
-            </el-form-item>
             <el-form-item label="Author">
               <el-input v-model="form.authorName" placeholder="Author name">
                 <template #prefix><i class="fas fa-user-pen"></i></template>
@@ -483,4 +559,17 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
   line-height: 1.5;
   word-break: break-word;
 }
+.lang-tabs :deep(.el-tabs__header) { margin-bottom: 16px; }
+.lang-tab-label { font-size: 14px; font-weight: 500; }
+.lang-status {
+  display: flex;
+  gap: 16px;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+.lang-done { color: var(--success, #67c23a); }
+.lang-done i { margin-right: 4px; }
+.lang-missing { color: var(--text-light, #909399); }
+.lang-missing i { margin-right: 4px; font-size: 10px; }
 </style>
