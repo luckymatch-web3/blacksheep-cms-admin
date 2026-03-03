@@ -284,6 +284,77 @@ async function handleGenerateImage() {
   }
 }
 
+const mdFileInput = ref(null)
+const mdImporting = ref(false)
+const mdFileInputZh = ref(null)
+const mdImportingZh = ref(false)
+
+function triggerMdImport() {
+  mdFileInput.value?.click()
+}
+
+function triggerMdImportZh() {
+  mdFileInputZh.value?.click()
+}
+
+function handleMdImport(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  if (!file.name.endsWith('.md') && !file.name.endsWith('.markdown') && !file.name.endsWith('.txt')) {
+    ElMessage.error('请选择 .md / .markdown / .txt 格式的文件')
+    event.target.value = ''
+    return
+  }
+  mdImporting.value = true
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const text = e.target.result
+    if (text && text.trim()) {
+      form.value.content = text
+      ElMessage.success('Markdown 文件导入成功')
+    } else {
+      ElMessage.warning('文件内容为空')
+    }
+    mdImporting.value = false
+    event.target.value = ''
+  }
+  reader.onerror = () => {
+    ElMessage.error('文件读取失败')
+    mdImporting.value = false
+    event.target.value = ''
+  }
+  reader.readAsText(file)
+}
+
+function handleMdImportZh(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  if (!file.name.endsWith('.md') && !file.name.endsWith('.markdown') && !file.name.endsWith('.txt')) {
+    ElMessage.error('请选择 .md / .markdown / .txt 格式的文件')
+    event.target.value = ''
+    return
+  }
+  mdImportingZh.value = true
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const text = e.target.result
+    if (text && text.trim()) {
+      form.value.contentZh = text
+      ElMessage.success('Markdown 文件导入成功（中文）')
+    } else {
+      ElMessage.warning('文件内容为空')
+    }
+    mdImportingZh.value = false
+    event.target.value = ''
+  }
+  reader.onerror = () => {
+    ElMessage.error('文件读取失败')
+    mdImportingZh.value = false
+    event.target.value = ''
+  }
+  reader.readAsText(file)
+}
+
 const showRejectBox = computed(() => articleStatus.value === 'REJECTED' && rejectNotes.value)
 const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || articleStatus.value === 'PENDING_REVIEW')
 </script>
@@ -332,6 +403,12 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
                   <el-input v-model="form.summary" type="textarea" :rows="2" placeholder="Brief summary for list display" />
                 </el-form-item>
                 <el-form-item label="Content">
+                  <div class="content-toolbar">
+                    <el-button size="small" @click="triggerMdImport" :loading="mdImporting">
+                      <i class="fas fa-file-import" style="margin-right: 4px"></i> 导入 Markdown
+                    </el-button>
+                    <input ref="mdFileInput" type="file" accept=".md,.markdown,.txt" style="display:none" @change="handleMdImport" />
+                  </div>
                   <MarkdownEditor ref="editorEnRef" v-model="form.content" />
                 </el-form-item>
               </el-form>
@@ -351,6 +428,12 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
                   <el-input v-model="form.summaryZh" type="textarea" :rows="2" placeholder="列表页显示的简短摘要" />
                 </el-form-item>
                 <el-form-item label="正文">
+                  <div class="content-toolbar">
+                    <el-button size="small" @click="triggerMdImportZh" :loading="mdImportingZh">
+                      <i class="fas fa-file-import" style="margin-right: 4px"></i> 导入 Markdown
+                    </el-button>
+                    <input ref="mdFileInputZh" type="file" accept=".md,.markdown,.txt" style="display:none" @change="handleMdImportZh" />
+                  </div>
                   <MarkdownEditor ref="editorZhRef" v-model="form.contentZh" />
                 </el-form-item>
               </el-form>
@@ -491,6 +574,12 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
   object-fit: cover;
   border-radius: var(--radius);
   cursor: pointer;
+}
+.content-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+  width: 100%;
 }
 .flux-prompt-box {
   margin-top: 10px;
