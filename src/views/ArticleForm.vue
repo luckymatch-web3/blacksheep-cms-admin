@@ -3,10 +3,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import mammoth from 'mammoth'
-import QuillEditor from '../components/QuillEditor.vue'
+import TurndownService from 'turndown'
+import MarkdownEditor from '../components/MarkdownEditor.vue'
 
 const editorEnRef = ref(null)
 const editorZhRef = ref(null)
+const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' })
 import {
   getArticle, createArticle, updateArticle,
   publishArticle, submitReview, setBanner,
@@ -311,12 +313,9 @@ async function handleWordImport(event) {
     const arrayBuffer = await file.arrayBuffer()
     const result = await mammoth.convertToHtml({ arrayBuffer })
     if (result.value) {
-      // Use setHtml to directly inject into Quill editor (fixes prop reactivity issue)
-      if (editorEnRef.value?.setHtml) {
-        editorEnRef.value.setHtml(result.value)
-      } else {
-        form.value.content = result.value
-      }
+      // Convert HTML to Markdown via turndown
+      const markdown = turndownService.turndown(result.value)
+      form.value.content = markdown
       ElMessage.success('Word 文档导入成功')
       if (result.messages.length > 0) {
         console.warn('Word import warnings:', result.messages)
@@ -345,12 +344,9 @@ async function handleWordImportZh(event) {
     const arrayBuffer = await file.arrayBuffer()
     const result = await mammoth.convertToHtml({ arrayBuffer })
     if (result.value) {
-      // Use setHtml to directly inject into Quill editor (fixes prop reactivity issue)
-      if (editorZhRef.value?.setHtml) {
-        editorZhRef.value.setHtml(result.value)
-      } else {
-        form.value.contentZh = result.value
-      }
+      // Convert HTML to Markdown via turndown
+      const markdown = turndownService.turndown(result.value)
+      form.value.contentZh = markdown
       ElMessage.success('Word 文档导入成功（中文）')
       if (result.messages.length > 0) {
         console.warn('Word import warnings:', result.messages)
@@ -420,7 +416,7 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
                     </el-button>
                     <input ref="wordFileInput" type="file" accept=".docx" style="display:none" @change="handleWordImport" />
                   </div>
-                  <QuillEditor ref="editorEnRef" v-model="form.content" />
+                  <MarkdownEditor ref="editorEnRef" v-model="form.content" />
                 </el-form-item>
               </el-form>
             </el-tab-pane>
@@ -445,7 +441,7 @@ const hideSubmitReview = computed(() => articleStatus.value === 'PUBLISHED' || a
                     </el-button>
                     <input ref="wordFileInputZh" type="file" accept=".docx" style="display:none" @change="handleWordImportZh" />
                   </div>
-                  <QuillEditor ref="editorZhRef" v-model="form.contentZh" />
+                  <MarkdownEditor ref="editorZhRef" v-model="form.contentZh" />
                 </el-form-item>
               </el-form>
             </el-tab-pane>
