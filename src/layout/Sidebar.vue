@@ -8,6 +8,7 @@ const props = defineProps({
   trashCount: { type: Number, default: 0 },
   forumPendingCount: { type: Number, default: 0 },
   withdrawalPendingCount: { type: Number, default: 0 },
+  traderApplicationPendingCount: { type: Number, default: 0 },
 })
 
 const route = useRoute()
@@ -26,10 +27,15 @@ const menuItems = [
   { path: '/trash', title: '回收站', icon: 'fas fa-trash-alt', badge: 'trash' },
   { group: '财务' },
   { path: '/withdrawals', title: '提现管理', icon: 'fas fa-money-bill-transfer', badge: 'withdrawal' },
+  { group: '交易员' },
+  { path: '/traders', title: '交易员管理', icon: 'fas fa-user-tie' },
+  { path: '/trader-applications', title: '入驻审核', icon: 'fas fa-user-check', badge: 'traderApp' },
+  { path: '/trader-articles', title: '交易员文章', icon: 'fas fa-file-lines' },
 ]
 
 const isActive = (path) => {
   if (path === '/articles') return route.path === '/articles'
+  if (path === '/traders') return route.path === '/traders'
   return route.path.startsWith(path)
 }
 
@@ -78,6 +84,10 @@ function navigate(path) {
             v-if="item.badge === 'withdrawal' && withdrawalPendingCount > 0"
             class="nav-badge withdrawal-badge"
           >{{ withdrawalPendingCount > 99 ? '99+' : withdrawalPendingCount }}</span>
+          <span
+            v-if="item.badge === 'traderApp' && traderApplicationPendingCount > 0"
+            class="nav-badge trader-app-badge"
+          >{{ traderApplicationPendingCount > 99 ? '99+' : traderApplicationPendingCount }}</span>
         </div>
       </template>
     </nav>
@@ -215,5 +225,9 @@ function navigate(path) {
 .withdrawal-badge {
   background: var(--success);
   box-shadow: 0 1px 4px rgba(63, 185, 80, 0.4);
+}
+.trader-app-badge {
+  background: var(--warning);
+  box-shadow: 0 1px 4px rgba(210, 153, 34, 0.4);
 }
 </style>

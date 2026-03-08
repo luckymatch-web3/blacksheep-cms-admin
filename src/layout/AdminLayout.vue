@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth'
 import { getArticles, getTrash } from '../api/articles'
 import { getForumStats } from '../api/forum'
 import { getWithdrawals } from '../api/withdrawal'
+import { getApplicationStats } from '../api/traders'
 
 const authStore = useAuthStore()
 const collapsed = ref(false)
@@ -13,6 +14,7 @@ const reviewCount = ref(0)
 const trashCount = ref(0)
 const forumPendingCount = ref(0)
 const withdrawalPendingCount = ref(0)
+const traderApplicationPendingCount = ref(0)
 
 onMounted(async () => {
   if (authStore.token && !authStore.user) {
@@ -23,11 +25,12 @@ onMounted(async () => {
 
 async function loadBadgeCounts() {
   try {
-    const [pendingRes, trashRes, forumRes, withdrawalRes] = await Promise.allSettled([
+    const [pendingRes, trashRes, forumRes, withdrawalRes, traderAppRes] = await Promise.allSettled([
       getArticles({ status: 'PENDING_REVIEW', size: 1 }),
       getTrash({ size: 1 }),
       getForumStats(),
       getWithdrawals({ status: 'PENDING' }),
+      getApplicationStats(),
     ])
     if (pendingRes.status === 'fulfilled') {
       reviewCount.value = pendingRes.value.data?.pageable?.totalElements || 0
@@ -40,6 +43,9 @@ async function loadBadgeCounts() {
     }
     if (withdrawalRes.status === 'fulfilled') {
       withdrawalPendingCount.value = withdrawalRes.value.data?.total || 0
+    }
+    if (traderAppRes.status === 'fulfilled') {
+      traderApplicationPendingCount.value = traderAppRes.value.data?.submitted || 0
     }
   } catch {}
 }
@@ -56,6 +62,7 @@ defineExpose({ loadBadgeCounts })
       :trash-count="trashCount"
       :forum-pending-count="forumPendingCount"
       :withdrawal-pending-count="withdrawalPendingCount"
+      :trader-application-pending-count="traderApplicationPendingCount"
       @toggle="collapsed = !collapsed"
     />
     <div class="main-wrap">
