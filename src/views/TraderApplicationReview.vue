@@ -34,7 +34,7 @@ async function loadApplications() {
       size: pageSize.value,
       status: activeTab.value === 'ALL' ? undefined : activeTab.value,
     })
-    applications.value = data?.data || []
+    applications.value = data?.content || data?.data || []
     total.value = data?.pageable?.totalElements || 0
   } catch (e) {
     ElMessage.error('加载失败')
