@@ -33,7 +33,7 @@ async function loadTraders() {
       size: pageSize.value,
       keyword: keyword.value || undefined,
     })
-    traders.value = data?.data || []
+    traders.value = data?.content || data?.data || []
     total.value = data?.pageable?.totalElements || 0
   } catch (e) {
     ElMessage.error('加载失败')

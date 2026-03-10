@@ -26,7 +26,7 @@ function formatDate(s) {
 async function loadTraderList() {
   try {
     const { data } = await getTraders({ size: 100 })
-    traderList.value = data?.data || []
+    traderList.value = data?.content || data?.data || []
   } catch {}
 }
 
@@ -40,7 +40,7 @@ async function loadArticles() {
       status: statusFilter.value || undefined,
       traderId: traderFilter.value || undefined,
     })
-    articles.value = data?.data || []
+    articles.value = data?.content || data?.data || []
     total.value = data?.pageable?.totalElements || 0
   } catch (e) {
     ElMessage.error('加载失败')

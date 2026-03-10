@@ -30,7 +30,7 @@ const categories = ['行情分析', '策略拆解', '交易复盘', '市场观�
 async function loadTraderList() {
   try {
     const { data } = await getTraders({ size: 100 })
-    traderList.value = data?.data || []
+    traderList.value = data?.content || data?.data || []
   } catch {}
 }
 
