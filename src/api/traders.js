@@ -70,6 +70,14 @@ export function unpublishTraderArticle(id) {
   return request.post(`/admin/trader-articles/${id}/unpublish`)
 }
 
+export function approveTraderArticle(id) {
+  return request.post(`/admin/trader-articles/${id}/approve`)
+}
+
+export function rejectTraderArticle(id, reason) {
+  return request.post(`/admin/trader-articles/${id}/reject?reason=${encodeURIComponent(reason)}`)
+}
+
 // File upload (reuse from articles.js)
 export function uploadFile(file) {
   const formData = new FormData()

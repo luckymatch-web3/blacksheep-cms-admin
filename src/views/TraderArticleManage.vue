@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { getTraderArticles, deleteTraderArticle, publishTraderArticle, unpublishTraderArticle, getTraders } from '../api/traders'
+import { getTraderArticles, deleteTraderArticle, publishTraderArticle, unpublishTraderArticle, approveTraderArticle, rejectTraderArticle, getTraders } from '../api/traders'
 
 const router = useRouter()
 const emit = defineEmits(['refresh-badges'])
@@ -100,6 +100,35 @@ async function handleUnpublish(row) {
   }
 }
 
+async function handleApprove(row) {
+  try {
+    await ElMessageBox.confirm(`确定通过文章 "${row.title}" 的审核？`, '审核通过', {
+      confirmButtonText: '通过',
+      cancelButtonText: '取消',
+      type: 'success',
+    })
+    await approveTraderArticle(row.id)
+    ElMessage.success('已通过审核并发布')
+    loadArticles()
+  } catch {}
+}
+
+async function handleReject(row) {
+  try {
+    const { value: reason } = await ElMessageBox.prompt('请输入驳回理由', '驳回文章', {
+      confirmButtonText: '驳回',
+      cancelButtonText: '取消',
+      type: 'warning',
+      inputPattern: /\S+/,
+      inputErrorMessage: '驳回理由不能为空',
+      inputPlaceholder: '请输入驳回原因...',
+    })
+    await rejectTraderArticle(row.id, reason)
+    ElMessage.success('已驳回')
+    loadArticles()
+  } catch {}
+}
+
 function getTraderName(traderId) {
   const t = traderList.value.find(x => x.id === traderId)
   return t ? t.displayName : `#${traderId}`
@@ -124,7 +153,9 @@ onMounted(() => {
         </el-select>
         <el-select v-model="statusFilter" placeholder="所有状态" clearable style="width:120px" @change="handleSearch">
           <el-option label="草稿" value="DRAFT" />
+          <el-option label="审核中" value="PENDING_REVIEW" />
           <el-option label="已发布" value="PUBLISHED" />
+          <el-option label="已驳回" value="REJECTED" />
         </el-select>
         <el-input v-model="keyword" placeholder="搜索标题..." style="width:180px" clearable @clear="handleSearch" @keyup.enter="handleSearch">
           <template #prefix><i class="fas fa-search"></i></template>
@@ -159,9 +190,13 @@ onMounted(() => {
             <el-tag size="small" type="info">{{ row.category || '-' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="90">
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag v-if="row.status === 'PUBLISHED'" type="success" size="small">已发布</el-tag>
+            <el-tag v-else-if="row.status === 'PENDING_REVIEW'" type="warning" size="small">审核中</el-tag>
+            <el-tooltip v-else-if="row.status === 'REJECTED'" :content="row.rejectReason || '无驳回原因'" placement="top">
+              <el-tag type="danger" size="small">已驳回</el-tag>
+            </el-tooltip>
             <el-tag v-else type="info" size="small">草稿</el-tag>
           </template>
         </el-table-column>
@@ -172,11 +207,17 @@ onMounted(() => {
             <span style="font-size:12px;color:var(--text-light)">{{ formatDate(row.publishedAt || row.createdAt) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button v-if="row.status !== 'PUBLISHED'" link type="success" size="small" @click="handlePublish(row)">发布</el-button>
-            <el-button v-else link type="warning" size="small" @click="handleUnpublish(row)">下架</el-button>
+            <template v-if="row.status === 'PENDING_REVIEW'">
+              <el-button link type="success" size="small" @click="handleApprove(row)">通过</el-button>
+              <el-button link type="warning" size="small" @click="handleReject(row)">驳回</el-button>
+            </template>
+            <template v-else>
+              <el-button v-if="row.status !== 'PUBLISHED'" link type="success" size="small" @click="handlePublish(row)">发布</el-button>
+              <el-button v-else link type="warning" size="small" @click="handleUnpublish(row)">下架</el-button>
+            </template>
             <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
